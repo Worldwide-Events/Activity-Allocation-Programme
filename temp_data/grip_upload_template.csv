@@ -1,0 +1,68 @@
+* Indicates A Mandatory Field,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"A Session ID is used to link speakers and sessions within the platform.  Each session must have a unique ID.
+
+Avoid using [SPACE] and special characters such as ""<>#@(), etc","Session Format must be one of the following values:
+
+'normal' for a standard session
+'speed_net' for a speed networking session","Name of the session in default language.
+
+This is a multi-language field.","In order to relate the session with a session track or a session location, you can use either their ids (Session Stage ID, Session Track ID) or the names (Session Stage Name, Session Track Name).","Use Stage to create sorting options that make finding sessions easier.
+This is a multi-language field.
+Sessions can only be assigned to one stage.
+
+If the session stage has already been created, use its ID.
+If the session stage is brand new (or thought to be) then use its name. The uploader will attempt to find the existing stages before creating new ones.","In order to relate the session with a session track or a session location, you can use either their ids (Session Stage ID, Session Track ID) or the names (Session Stage Name, Session Track Name).","Use Tracks to create sorting options that make finding sessions easier. You can also use data type permissions to limit Track access.
+This is a multi-language field.
+
+Sessions can only be assigned to one track.","Enter a description for the session
+
+This is a multi-language field","Session dates must be formatted as DD/MM/YYYY
+and be in the timezone that you have configured for your event.
+
+You cannot create or update sessions that take place in the past.",Session start time in a 24-hour format (military time) as HH:MM and in the timezone that you have configured for your event.,"This is an optional field. If no value is provided, the Start Date provided will be used instead.
+
+Session dates must be formatted as DD/MM/YYYY
+and be in the timezone that you have configured for your event.",Session end time in a 24-hour format (military time) as HH:MM and in the timezone that you have configured for your event.,You can add up to 500 speakers using their Profile IDs in a list. They will be joined to this session as speakers. Profile IDs must be separated using your chosen separator symbol.,List up to 500 profile IDs that will have this session added to the attendee's schedule. Profile IDs must be separated using your chosen separator symbol.,"Add your session tags. For multiple tags, separate using your chosen separator symbol.",Please enter a valid URL. Make sure it begins with https://,Please enter a valid URL. Make sure it begins with https://,Link to external live streaming/webinar provider,"Embed in Session Details View, by turning this on the live stream URL will be embedded into the session details page.
+
+'Yes' or 'No' options
+
+Defaults to 'No' if not provided
+
+Only applicable for sessions with 'normal' Session Format",Link to external video recording. Make sure it begins with https://,"Embed in Session Details View, by turning this on the video recording URL will be embedded into the session details page.
+
+'Yes' or 'No' options
+
+Defaults to 'No' if not provided",This link will take a user to an external Polling and Q&A provider.,Insert the embeddable source URL. Please make sure that the resource is permitted to be embedded on Grip's site and begins with https://,"If Audience Interaction Embed URL is provided, then Audience Interaction Customized Label in the default language must be provided.
+
+Max 16 characters.","Only participants that you manually add to the attendee list will be able to see the session.
+
+'Yes' or 'No' options
+
+Defaults to 'No' if not provided","This is the list of participants that you want to be able to see the private session.
+Participant IDs must be separated using your chosen separator symbol.
+
+If you want this session added to the participant's schedule, add their profile ID also to the Profile ID field.","Display a countdown to start on the web platform's session page.
+
+'Yes' or 'No' options
+
+Defaults to 'Yes' if not provided","Show an extra item in the Session Details Screen that will open a list of Session Attendees on Web and Mobile apps.
+'Yes' or 'No' options.
+Defaults to 'No' if not provided.",This session holding image is only shown when the session countdown is enabled. Please provide a URL to a publicly accessible image on the web.,"Session will be displayed in 'My Schedule' page of all users, although they won't be automatically joined. It won't be possible to create any other session in the same timeblock.
+Session Attendee List is disabled when this feature is enabled.","Show an extra label with ""Booking required"" and a pop-up to confirm attendance when a user chooses ""Add to Schedule"".
+
+'Yes' or 'No' options
+
+Defaults to 'No' if not provided","Sessions can be recommended to users in their schedule.
+
+'Yes' or 'No' options
+
+Defaults to 'Yes' if not provided","Users will not be able to join other sessions at the same time.
+
+'Yes' or 'No' options
+
+Defaults to 'No' if not provided",Use the profile ID associated with the company you want to be promoted on the session page.,"User will be able to watch the live stream and recordings without adding a session to schedule.
+
+'Yes' or 'No' options
+
+Defaults to 'No' if not provided",Session Attendee Limit,This is a freeform custom field that you have created - any text added will REPLACE any existing text. Please fill columns for all languages listed.,"This is a custom field that you have created - any values added will REPLACE any existing values. For multi-select fields, separate values using your chosen separator symbol.","This is a custom field that you have created - any values added will REPLACE any existing values. For multi-select fields, separate values using your chosen separator symbol.","This is a custom field that you have created - any values added will REPLACE any existing values. For multi-select fields, separate values using your chosen separator symbol."
+External Session Registration ID *,Session Format *,Session Name en-gb *,Session Stage ID,Stage Name en-gb,Session Track ID,Track Name en-gb,Description en-gb,Start Date *,Start time *,End Date,End time *,Speaker ID,Attendee ID,Session Tags en-gb,Website URL,Session Content URL,Live Stream URL en-gb,Live Stream URL Embed,Video URL en-gb,Video Recording URL Embed,Polling and Q&A URL,Audience interaction embed URL,Audience Interaction Customized Label en-gb,Is Session Private,Private Session Participants,Session Countdown,Session Attendee List,Countdown Image,Required attendance for all,Attendance confirmation required,Session can be recommended,Time blocking,Sponsor profile,Open stream,Session Attendee Limit,What to wear/bring en-gb,Activity Type en-gb,Level en-gb,Intensity en-gb
