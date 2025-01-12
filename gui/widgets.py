@@ -64,13 +64,13 @@ class UploadFrame(ttk.Frame):
         download_frame = ttk.LabelFrame(self, text="Download Results")
         download_frame.pack(padx=10, pady=10, fill="x")
 
-        self.download_button = tk.Button(download_frame, text="Download Assigned Users", command=lambda: self.download_file("temp_data/assigned_users.csv"), state=tk.DISABLED)
+        self.download_button = tk.Button(download_frame, text="Download Assigned Users", command=lambda: self.download_file("gui/temp_data/assigned_users.csv"), state=tk.DISABLED)
         self.download_button.pack(pady=3)
 
-        self.download_button_2 = tk.Button(download_frame, text="Download Unassigned Users", command=lambda: self.download_file("temp_data/unassigned_users.csv"), state=tk.DISABLED)
+        self.download_button_2 = tk.Button(download_frame, text="Download Unassigned Users", command=lambda: self.download_file("gui/temp_data/unassigned_users.csv"), state=tk.DISABLED)
         self.download_button_2.pack(pady=3)
 
-        self.download_button_3 = tk.Button(download_frame, text="Download Grip Upload", command=lambda: self.download_file("temp_data/grip_upload.csv"), state=tk.DISABLED)
+        self.download_button_3 = tk.Button(download_frame, text="Download Grip Upload", command=lambda: self.download_file("gui/temp_data/grip_upload.csv"), state=tk.DISABLED)
         self.download_button_3.pack(pady=3)
 
         # Assign Button
@@ -139,47 +139,25 @@ class UploadFrame(ttk.Frame):
         filepath (str):  The relative path to the csv file within the application
     """
     def download_file(self, filepath):
-        # Get the base directory (works for both script & executable)
         try:
-            if getattr(sys, 'frozen', False):
-                base_dir = sys._MEIPASS
-            else:   
-                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-            # Construct the full path to the internal file
-            internal_filepath = os.path.join(base_dir, filepath)
-
-            # Get the user-selected save location 
-            exportfile_path = filedialog.asksaveasfilename(defaultextension=".csv")
-            if not exportfile_path:
+            # Get filename from filepath
+            filename = os.path.basename(filepath)
+            source_path = get_data_path(filename)
+            
+            # Get save location from user
+            export_path = filedialog.asksaveasfilename(defaultextension=".csv")
+            if not export_path:  # User cancelled
                 return
-
-            # Open the temporary file and the user-specified save location
-            with open(internal_filepath, 'r') as infile, open(exportfile_path, 'w', newline='') as outfile:
+                
+            # Copy file contents
+            with open(source_path, 'r') as infile, open(export_path, 'w', newline='') as outfile:
                 csv_reader = csv.reader(infile)
                 csv_writer = csv.writer(outfile)
                 for row in csv_reader:
                     csv_writer.writerow(row)
 
         except Exception as e:
-            # Handle potential errors (e.g., file not found, permission errors)
             tk.messagebox.showerror("Error", f"An error occurred while saving the file: {e}")
-
-        # try:
-        #     with open(filepath, 'r') as infile, open(exportfile_path, 'w', newline='') as outfile:
-        #         csv_reader = csv.reader(infile)
-        #         csv_writer = csv.writer(outfile)
-        #         for row in csv_reader:
-        #             csv_writer.writerow(row)
-
-        # except FileNotFoundError:
-        #     messagebox.showerror("Error", f"File not found: {filepath}")
-        # except Exception as e:
-        #     messagebox.showerror("Error", f"An error occurred during download: {e}")                   
-    
-    # Create a widge to accept user entry in the form of numbers for the maximum activities
-    def entry_widgets():
-        pass
 
     """
     If i decide to do different pages this below function should become part of it's own class for that page. TODO: is this a widgets function?
@@ -190,22 +168,29 @@ class UploadFrame(ttk.Frame):
         print(max_spaces)
         assignments, unassigned_users = DataProcessor.assign_to_activity(max_spaces)
 
-        base_path = os.path.dirname(get_data_path("assigned_users.csv"))  # Get the base path
+        #base_path = os.path.dirname(get_data_path("assigned_users.csv"))  # Get the base path
+        base_path = os.path.dirname(get_data_path("")) # Use the utility function to get the base path
         
         # transform dataframes to csv files
-        HandleFiles.write_csv(assignments, "assigned_users.csv", base_path=base_path)
-        HandleFiles.write_csv(unassigned_users, "unassigned_users.csv", base_path=base_path)
+        HandleFiles.write_csv(assignments, "assigned_users.csv")
+        HandleFiles.write_csv(unassigned_users, "unassigned_users.csv")
 
         # generate the Grip upload csv file:
-        HandleFiles.generate_grip_csv(assignments, "grip_upload_template.csv", "grip_upload.csv", base_path=base_path)
+        template_path = get_data_path("grip_upload_template.csv", is_resource=True)
+        print(template_path)
+        HandleFiles.generate_grip_csv(assignments, template_path, "grip_upload.csv")
 
-        # Delay the ability to donwload files to ensure processing & generating of the activity files in case of large datasets
+        # Delay the ability to download files to ensure processing & generating of the activity files in case of large datasets
         time.sleep(2.0)
 
-        #Enable download buttons once the assign activity has been completed
+        # Enable download buttons once the assign activity has been completed
         self.download_button.config(state=tk.NORMAL)
         self.download_button_2.config(state=tk.NORMAL)
         self.download_button_3.config(state=tk.NORMAL)
+
+        # Clear data after processing
+        DataProcessor.clear_data()
+        # HandleFiles.clear_data()
 
     class ExportFrame(ttk.Frame):
     # in the future this can be a second page and the download button should be moved here

@@ -1,0 +1,3 @@
+([('main',
+   '/Users/livvywilson/WorldwideEvents/WWEApp/dist/main',
+   'EXECUTABLE')],)

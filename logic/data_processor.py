@@ -96,3 +96,8 @@ class DataProcessor():
         print(unassigned_users_df)
 
         return assignments_df, unassigned_users_df
+
+    @classmethod
+    def clear_data(cls):
+        cls.df = None
+        cls.preference_cols = None
