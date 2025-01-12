@@ -43,15 +43,8 @@ class UploadFrame(ttk.Frame):
             self.style.configure("TButton", background="#2E8B57", foreground="white") 
 
     def create_widgets(self):
-        # Upload Section
-        upload_frame = ttk.LabelFrame(self, text="Upload CSV File")
-        upload_frame.pack(padx=10, pady=10, fill="x") 
-
-        self.upload_button = tk.Button(upload_frame, text="Upload CSV", command=self.upload_file)
-        self.upload_button.pack(pady=5)
-
         # Metadata Section
-        metadata_frame = ttk.LabelFrame(self, text="Upload Activity Metadata File")
+        metadata_frame = ttk.LabelFrame(self, text="Step 1: Upload Activity Metadata File")
         metadata_frame.pack(padx=10, pady=10, fill="x")
 
         self.metadata_button = tk.Button(metadata_frame, text="Upload Metadata CSV", command=self.upload_metadata_file)
@@ -59,6 +52,13 @@ class UploadFrame(ttk.Frame):
 
         self.metadata_display = tk.Text(metadata_frame, height=10, state=tk.DISABLED)
         self.metadata_display.pack(pady=5)
+
+        # Upload Section
+        upload_frame = ttk.LabelFrame(self, text="Step 2: Upload Attendee CSV File")
+        upload_frame.pack(padx=10, pady=10, fill="x") 
+
+        self.upload_button = tk.Button(upload_frame, text="Upload CSV", command=self.upload_file, state=tk.DISABLED)
+        self.upload_button.pack(pady=5)
 
         # Download Section
         download_frame = ttk.LabelFrame(self, text="Download Results")
@@ -77,7 +77,6 @@ class UploadFrame(ttk.Frame):
         self.assign_button = tk.Button(self, text="Assign Activities", command=self.on_assign_activity, state=tk.DISABLED)
         self.assign_button.pack(pady=10)
 
-
     def upload_file(self):
         # Open a file dialog to select a CSV file
         file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
@@ -86,8 +85,6 @@ class UploadFrame(ttk.Frame):
             data = HandleFiles.read_csv(file_path)
             self.data = data # store the data in a class attribute
             DataProcessor.set_data(data)
-
-            self.create_activity_widgets() 
 
             # Enable the assign button if both data and metadata are uploaded
             if self.metadata:
@@ -109,17 +106,20 @@ class UploadFrame(ttk.Frame):
                 self.metadata_display.insert(tk.END, f"{activity}: {spaces} spaces\n")
             self.metadata_display.config(state=tk.DISABLED)
 
+            # Enable the upload button if metadata is uploaded
+            if self.metadata:
+                self.upload_button.config(state=tk.NORMAL)
+
             # Enable the assign button if both data and metadata are uploaded
             if self.data:
                 self.assign_button.config(state=tk.NORMAL)
 
     def create_activity_widgets(self):
-        for activity in DataProcessor.activity_cols:
-            label = tk.Label(self, text=f"Max capacity for {activity}:")
-            label.pack()
-            entry = tk.Entry(self)
-            entry.pack()
-            self.entry_widgets[activity] = entry 
+        self.metadata_display.config(state=tk.NORMAL)
+        self.metadata_display.delete(1.0, tk.END)
+        for activity, spaces in self.metadata.items():
+            self.metadata_display.insert(tk.END, f"{activity}: {spaces} spaces\n")
+        self.metadata_display.config(state=tk.DISABLED)
     
     
     # # this is to be moved to export frame in the future once multiple pages have been established
@@ -188,7 +188,7 @@ class UploadFrame(ttk.Frame):
         DataProcessor.set_data(self.data) 
         max_spaces = self.metadata  # Use metadata for max spaces
         print(max_spaces)
-        assignments, unassigned_users = DataProcessor.assign_to_activity(DataProcessor.activity_cols, max_spaces)
+        assignments, unassigned_users = DataProcessor.assign_to_activity(max_spaces)
 
         base_path = os.path.dirname(get_data_path("assigned_users.csv"))  # Get the base path
         
