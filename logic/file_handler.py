@@ -31,25 +31,23 @@ class HandleFiles:
 
 
 # function to save data as a csv file - tbc on if it will need updating later on
-    def write_csv(data, output_file, base_path=None): 
+    @staticmethod
+    def write_csv(data, output_file): 
         try:
-            if base_path:
-                output_file = os.path.join(base_path, output_file)
-            data.to_csv(output_file, index=False)
-
+            output_path = get_data_path(output_file)
+            data.to_csv(output_path, index=False)
         except Exception as e: 
-            print(f"error writing to {output_file}: {e}")
+            print(f"Error writing to {output_path}: {e}")
 
 
 # function to generate the grip upload
-#TODO: spend some time understanding the one liner
-    def generate_grip_csv(df, input_file, output_file, base_path=None):
+    #TODO: spend some time understanding the one liner
+    def generate_grip_csv(df, input_file, output_file):
         activity_to_gripids = df.groupby('Assigned Activity')['Attendee ID'].apply(lambda x: ' | '.join(x.astype(str))).to_dict()
 
         try:
-            if base_path:
-                input_file = os.path.join(base_path, input_file)
-                output_file = os.path.join(base_path, output_file)
+            input_file = get_data_path(input_file)
+            output_file = get_data_path(output_file)
 
             # Ensure the directory for output_file exists
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -96,37 +94,3 @@ class HandleFiles:
             print(f"Error: {e}")  # Print the specific ValueError message
         except Exception as e:
             print(f"An error occurred: {e}")
-
-
-
-#    try:
-#         with open(template_filename, "r", newline='') as infile, \
-#                 open(output_filename, "w", newline='') as outfile:
-
-#             reader = csv.reader(infile)
-#             writer = csv.writer(outfile)   
-
-
-#             # Copy the first two rows and the header
-#             first_two_rows = [next(reader) for _ in range(2)]
-#             header = next(reader)
-#             writer.writerows(first_two_rows)
-#             writer.writerow(header)
-
-#             # Find the column indices based on the column names
-#             key_column_index = header.index(key_column_name)
-#             value_column_index = header.index(value_column_name)
-
-#             # Write the dictionary data to the specified columns
-#             for key, value in dictionary.items():
-#                 row = [""] * len(header)  # Create an empty row
-#                 row[key_column_index] = key
-#                 row[value_column_index] = value
-#                 writer.writerow(row)
-
-#     except FileNotFoundError:
-#         print(f"Error: The file '{template_filename}' was not found.")
-#     except ValueError:
-#         print(f"Error: Column names '{key_column_name}' or '{value_column_name}' not found in the CSV header.")
-#     except Exception as e:
-#         print(f"An error occurred: {e}")
