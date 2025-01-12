@@ -23,6 +23,7 @@ class UploadFrame(ttk.Frame):
         self.create_widgets()
         self.entry_widgets = {}
         self.data = None
+        self.metadata = None  # Add attribute to store metadata
 
         self.container.geometry('550x500+500+400')
 
@@ -48,6 +49,16 @@ class UploadFrame(ttk.Frame):
 
         self.upload_button = tk.Button(upload_frame, text="Upload CSV", command=self.upload_file)
         self.upload_button.pack(pady=5)
+
+        # Metadata Section
+        metadata_frame = ttk.LabelFrame(self, text="Upload Activity Metadata File")
+        metadata_frame.pack(padx=10, pady=10, fill="x")
+
+        self.metadata_button = tk.Button(metadata_frame, text="Upload Metadata CSV", command=self.upload_metadata_file)
+        self.metadata_button.pack(pady=5)
+
+        self.metadata_display = tk.Text(metadata_frame, height=10, state=tk.DISABLED)
+        self.metadata_display.pack(pady=5)
 
         # Download Section
         download_frame = ttk.LabelFrame(self, text="Download Results")
@@ -77,11 +88,30 @@ class UploadFrame(ttk.Frame):
             DataProcessor.set_data(data)
 
             self.create_activity_widgets() 
-            self.assign_button.config(state=tk.NORMAL)
 
-            # # Pass the data to the processing callback
-            # if self.process_callback:
-            #     self.process_callback(data)  #TODO: uncomment at future date when you know it's purpose
+            # Enable the assign button if both data and metadata are uploaded
+            if self.metadata:
+                self.assign_button.config(state=tk.NORMAL)
+
+    def upload_metadata_file(self):
+        # Open a file dialog to select a CSV file
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        if file_path:
+            # Read the metadata CSV file
+            with open(file_path, 'r') as file:
+                reader = csv.DictReader(file)
+                self.metadata = {row['Activity']: int(row['Spaces']) for row in reader}
+
+            # Display the metadata in the text widget
+            self.metadata_display.config(state=tk.NORMAL)
+            self.metadata_display.delete(1.0, tk.END)
+            for activity, spaces in self.metadata.items():
+                self.metadata_display.insert(tk.END, f"{activity}: {spaces} spaces\n")
+            self.metadata_display.config(state=tk.DISABLED)
+
+            # Enable the assign button if both data and metadata are uploaded
+            if self.data:
+                self.assign_button.config(state=tk.NORMAL)
 
     def create_activity_widgets(self):
         for activity in DataProcessor.activity_cols:
@@ -156,7 +186,8 @@ class UploadFrame(ttk.Frame):
     """
     def on_assign_activity(self):
         DataProcessor.set_data(self.data) 
-        max_spaces = {activity: int(self.entry_widgets[activity].get()) for activity in DataProcessor.activity_cols}
+        max_spaces = self.metadata  # Use metadata for max spaces
+        print(max_spaces)
         assignments, unassigned_users = DataProcessor.assign_to_activity(DataProcessor.activity_cols, max_spaces)
 
         base_path = os.path.dirname(get_data_path("assigned_users.csv"))  # Get the base path
