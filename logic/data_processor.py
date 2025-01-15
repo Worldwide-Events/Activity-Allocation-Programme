@@ -10,7 +10,8 @@ class DataProcessor():
     @classmethod
     def set_data(cls, data):
         cls.df = data
-        cls.preference_cols = ['My top preference:', 'My second preference:', 'My third preference:']
+        # Find all columns starting with 'My' and containing 'preference' in original order
+        cls.preference_cols = [col for col in data.columns if col.startswith('My') and 'preference' in col.lower()]
 
     @classmethod
     def assign_to_activity(cls, max_spaces):
@@ -32,6 +33,13 @@ class DataProcessor():
 
         # Create a set of assigned user indices
         assigned_users = set()
+
+        # Helper method to check if user wants to participate and activity is in their preferences
+        def is_valid_assignment(user_id, activity):
+            user_data = cls.df[cls.df['Attendee ID'] == user_id].iloc[0]
+            if user_data['Do you want to take part in an activity?'] != 'Yes':
+                return False
+            return activity in [user_data[col] for col in cls.preference_cols]
 
         # Iterate through choices in order (1st, 2nd, 3rd, etc.)
         for choice_col in cls.preference_cols:
@@ -59,9 +67,9 @@ class DataProcessor():
                         else:
                             break  # Move to the next activity if this one is full
 
-        # Identify unassigned users
+        # Identify unassigned users who want to participate
         for index, row in cls.df.iterrows():
-            if row['Attendee ID'] not in assigned_users:
+            if row['Attendee ID'] not in assigned_users and row['Do you want to take part in an activity?'] == 'Yes':
                 unassigned_users.append({
                     'Attendee ID': row['Attendee ID'],
                     'First Name': row['First, please confirm your name: | First name'],
@@ -76,7 +84,10 @@ class DataProcessor():
             ].values.flatten()
 
             for preference in user_preferences:
-                if preference in remaining_spaces and remaining_spaces[preference] > 0:
+                if (preference in remaining_spaces and 
+                    remaining_spaces[preference] > 0 and 
+                    is_valid_assignment(user['Attendee ID'], preference)):
+                    
                     assignments.append({
                         'Attendee ID': user['Attendee ID'],
                         'First Name': user['First Name'],
