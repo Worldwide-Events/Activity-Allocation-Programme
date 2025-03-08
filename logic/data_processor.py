@@ -108,7 +108,7 @@ class DataProcessor():
 
         # print(assignments_df)
         # print(unassigned_users_df)
-        print(summary)
+        # print(summary)
 
         return assignments_df, unassigned_users_df, summary
 
@@ -151,7 +151,9 @@ class DataProcessor():
         for _, row in assignments.iterrows():
             user_id = row['Attendee ID']
             user_preferences = cls.df.loc[cls.df['Attendee ID'] == user_id, cls.preference_cols].values.flatten()
+            # print(user_preferences)
             assigned_activity = row['Assigned Activity']
+            # print(assigned_activity)
 
             if assigned_activity == user_preferences[0]:
                 first_preference_count += 1
