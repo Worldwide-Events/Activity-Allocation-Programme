@@ -103,12 +103,75 @@ class DataProcessor():
         assignments_df = pd.DataFrame(assignments)
         unassigned_users_df = pd.DataFrame(unassigned_users)
 
-        print(assignments_df)
-        print(unassigned_users_df)
+        # Calculate summary statistics
+        summary = cls.calculate_summary(assignments_df, unassigned_users_df, cls.df)
 
-        return assignments_df, unassigned_users_df
+        # print(assignments_df)
+        # print(unassigned_users_df)
+        # print(summary)
+
+        return assignments_df, unassigned_users_df, summary
 
     @classmethod
     def clear_data(cls):
         cls.df = None
         cls.preference_cols = None
+
+    @classmethod
+    def calculate_summary(cls, assignments, unassigned_users, data):
+        """
+        Calculate summary statistics for the assignments.
+
+        Args:
+            assignments: DataFrame with assigned users.
+            unassigned_users: DataFrame with unassigned users.
+            data: Original DataFrame with all user data.
+
+        Returns:
+            A dictionary with summary statistics.
+        """
+        if cls.df is None or cls.preference_cols is None:
+            raise ValueError("Data not set. Please call set_data() first.")
+
+        num_total_users_activity_true = data["Do you want to take part in an activity?"].value_counts().get('Yes', 0)
+        num_total_users_assigned = len(assignments)
+        num_total_users_unassigned = len(unassigned_users)
+
+        percent_assigned = f"{num_total_users_assigned / num_total_users_activity_true * 100:.2f}%"
+        percent_unassigned = f"{num_total_users_unassigned / num_total_users_activity_true * 100:.2f}%"
+
+        first_preference_col = cls.preference_cols[0]
+        second_preference_col = cls.preference_cols[1] if len(cls.preference_cols) > 1 else None
+        third_preference_col = cls.preference_cols[2] if len(cls.preference_cols) > 2 else None
+
+        first_preference_count = 0
+        second_preference_count = 0
+        third_preference_count = 0
+
+        for _, row in assignments.iterrows():
+            user_id = row['Attendee ID']
+            user_preferences = cls.df.loc[cls.df['Attendee ID'] == user_id, cls.preference_cols].values.flatten()
+            # print(user_preferences)
+            assigned_activity = row['Assigned Activity']
+            # print(assigned_activity)
+
+            if assigned_activity == user_preferences[0]:
+                first_preference_count += 1
+            elif second_preference_col and assigned_activity == user_preferences[1]:
+                second_preference_count += 1
+            elif third_preference_col and assigned_activity == user_preferences[2]:
+                third_preference_count += 1
+
+        percent_first_preference = f"{first_preference_count / num_total_users_assigned * 100:.2f}%" if num_total_users_assigned > 0 else "0%"
+        percent_second_preference = f"{second_preference_count / num_total_users_assigned * 100:.2f}%" if num_total_users_assigned > 0 else "0%"
+        percent_third_preference = f"{third_preference_count / num_total_users_assigned * 100:.2f}%" if num_total_users_assigned > 0 else "0%"
+
+        summary = {
+            "percent_assigned": percent_assigned,
+            "percent_unassigned": percent_unassigned,
+            "percent_first_preference": percent_first_preference,
+            "percent_second_preference": percent_second_preference,
+            "percent_third_preference": percent_third_preference
+        }
+
+        return summary

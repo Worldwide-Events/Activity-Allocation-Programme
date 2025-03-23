@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from tkinter import ttk
 from logic.file_handler import HandleFiles
 from logic.data_processor import *
@@ -24,6 +24,8 @@ class UploadFrame(ttk.Frame):
         self.entry_widgets = {}
         self.data = None
         self.metadata = None  # Add attribute to store metadata
+        self.summary_label = tk.Label(self, text="Summary statistics available after the run...")
+        self.summary_label.pack(pady=5)
 
         self.container.geometry('550x500+500+400')
 
@@ -77,42 +79,55 @@ class UploadFrame(ttk.Frame):
         self.assign_button = tk.Button(self, text="Assign Activities", command=self.on_assign_activity, state=tk.DISABLED)
         self.assign_button.pack(pady=10)
 
-    def upload_file(self):
-        # Open a file dialog to select a CSV file
-        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
-        if file_path:
-            # Call the function from file_handler to read the CSV
-            data = HandleFiles.read_csv(file_path)
-            self.data = data # store the data in a class attribute
-            DataProcessor.set_data(data)
 
-            # Enable the assign button if both data and metadata are uploaded
-            if self.metadata:
-                self.assign_button.config(state=tk.NORMAL)
+    def upload_file(self):
+        try:
+            # Open a file dialog to select a CSV file
+            file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+            if file_path:
+                # Call the function from file_handler to read the CSV
+                data = HandleFiles.read_csv(file_path)
+                if data is None:
+                    raise ValueError("The file could not be read or is empty.")
+                self.data = data  # store the data in a class attribute
+                DataProcessor.set_data(data)
+
+                # Enable the assign button if both data and metadata are uploaded
+                if self.metadata:
+                    self.assign_button.config(state=tk.NORMAL)
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while uploading the file: {e}")
 
     def upload_metadata_file(self):
-        # Open a file dialog to select a CSV file
-        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
-        if file_path:
-            # Read the metadata CSV file
-            with open(file_path, 'r') as file:
-                reader = csv.DictReader(file)
-                self.metadata = {row['Activity']: int(row['Spaces']) for row in reader}
+        try:
+            # Open a file dialog to select a CSV file
+            file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+            if file_path:
+                # Read the metadata CSV file
+                with open(file_path, 'r') as file:
+                    reader = csv.DictReader(file)
+                    self.metadata = {row['Activity']: int(row['Spaces']) for row in reader}
 
-            # Display the metadata in the text widget
-            self.metadata_display.config(state=tk.NORMAL)
-            self.metadata_display.delete(1.0, tk.END)
-            for activity, spaces in self.metadata.items():
-                self.metadata_display.insert(tk.END, f"{activity}: {spaces} spaces\n")
-            self.metadata_display.config(state=tk.DISABLED)
+                # Display the metadata in the text widget
+                self.metadata_display.config(state=tk.NORMAL)
+                self.metadata_display.delete(1.0, tk.END)
+                for activity, spaces in self.metadata.items():
+                    self.metadata_display.insert(tk.END, f"{activity}: {spaces} spaces\n")
+                self.metadata_display.config(state=tk.DISABLED)
 
-            # Enable the upload button if metadata is uploaded
-            if self.metadata:
-                self.upload_button.config(state=tk.NORMAL)
+                # Enable the upload button if metadata is uploaded
+                if self.metadata:
+                    self.upload_button.config(state=tk.NORMAL)
 
-            # Enable the assign button if both data and metadata are uploaded
-            if self.data:
-                self.assign_button.config(state=tk.NORMAL)
+                # Enable the assign button if both data and metadata are uploaded
+                if self.data:
+                    self.assign_button.config(state=tk.NORMAL)
+        except FileNotFoundError:
+            messagebox.showerror("Error", "The selected file was not found.")
+        except csv.Error:
+            messagebox.showerror("Error", "The selected file is not a valid CSV.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
 
     def create_activity_widgets(self):
         self.metadata_display.config(state=tk.NORMAL)
@@ -120,19 +135,12 @@ class UploadFrame(ttk.Frame):
         for activity, spaces in self.metadata.items():
             self.metadata_display.insert(tk.END, f"{activity}: {spaces} spaces\n")
         self.metadata_display.config(state=tk.DISABLED)
-    
-    
-    # # this is to be moved to export frame in the future once multiple pages have been established
-    # def download_file(self, filepath):
-    #     exportfile_path = filedialog.asksaveasfilename(defaultextension=".csv")
-    #     if not exportfile_path:  # User cancelled the save dialog
-    #         return
-    #     with open(filepath, 'r') as infile, open(exportfile_path, 'w', newline='') as outfile:
-    #             csv_reader = csv.reader(infile)
-    #             csv_writer = csv.writer(outfile)
-    #             for row in csv_reader:
-    #                 csv_writer.writerow(row)
 
+    
+    def create_summary_widgets(self, summary):
+        self.summary_label.config(text=summary)
+    
+    
     """
     Downloads a csv file to a user specified location
     Args:
@@ -157,40 +165,54 @@ class UploadFrame(ttk.Frame):
                     csv_writer.writerow(row)
 
         except Exception as e:
-            tk.messagebox.showerror("Error", f"An error occurred while saving the file: {e}")
+            messagebox.showerror("Error", f"An error occurred while saving the file: {e}")
 
     """
     If i decide to do different pages this below function should become part of it's own class for that page. TODO: is this a widgets function?
     """
     def on_assign_activity(self):
-        DataProcessor.set_data(self.data) 
-        max_spaces = self.metadata  # Use metadata for max spaces
-        print(max_spaces)
-        assignments, unassigned_users = DataProcessor.assign_to_activity(max_spaces)
+        try:
+            DataProcessor.set_data(self.data) 
+            max_spaces = self.metadata  # Use metadata for max spaces
+            assignments, unassigned_users, summary = DataProcessor.assign_to_activity(max_spaces)
 
-        #base_path = os.path.dirname(get_data_path("assigned_users.csv"))  # Get the base path
-        base_path = os.path.dirname(get_data_path("")) # Use the utility function to get the base path
-        
-        # transform dataframes to csv files
-        HandleFiles.write_csv(assignments, "assigned_users.csv")
-        HandleFiles.write_csv(unassigned_users, "unassigned_users.csv")
+            base_path = os.path.dirname(get_data_path(""))  # Use the utility function to get the base path
+            
+            # transform dataframes to csv files
+            HandleFiles.write_csv(assignments, "assigned_users.csv")
+            HandleFiles.write_csv(unassigned_users, "unassigned_users.csv")
 
-        # generate the Grip upload csv file:
-        template_path = get_data_path("grip_upload_template.csv", is_resource=True)
-        print(template_path)
-        HandleFiles.generate_grip_csv(assignments, template_path, "grip_upload.csv")
+            # generate the Grip upload csv file:
+            template_path = get_data_path("grip_upload_template.csv", is_resource=True)
+            HandleFiles.generate_grip_csv(assignments, template_path, "grip_upload.csv")
 
-        # Delay the ability to download files to ensure processing & generating of the activity files in case of large datasets
-        time.sleep(2.0)
+            # Delay the ability to download files to ensure processing & generating of the activity files in case of large datasets
+            time.sleep(2.0)
 
-        # Enable download buttons once the assign activity has been completed
-        self.download_button.config(state=tk.NORMAL)
-        self.download_button_2.config(state=tk.NORMAL)
-        self.download_button_3.config(state=tk.NORMAL)
+            # Enable download buttons once the assign activity has been completed
+            self.download_button.config(state=tk.NORMAL)
+            self.download_button_2.config(state=tk.NORMAL)
+            self.download_button_3.config(state=tk.NORMAL)
 
-        # Clear data after processing
-        DataProcessor.clear_data()
-        # HandleFiles.clear_data()
+            # Display summary statistics
+            if bool(summary):
+                summary_message = (
+                    f"Assigned: {summary['percent_assigned']}\n"
+                    f"Unassigned: {summary['percent_unassigned']}\n"
+                    f"First Preference: {summary['percent_first_preference']}\n"
+                    f"Second Preference: {summary['percent_second_preference']}\n"
+                    f"Third Preference: {summary['percent_third_preference']}\n"
+                )
+
+                self.create_summary_widgets(summary_message)
+            
+            else:
+                self.create_summary_widgets("Summary unavailable")
+
+            # Clear data after processing
+            DataProcessor.clear_data()
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred during activity assignment: {e}")
 
     class ExportFrame(ttk.Frame):
     # in the future this can be a second page and the download button should be moved here
